@@ -1,4 +1,5 @@
-﻿using Lotaris.LmeCl.Store;
+﻿using HelloWorld.Common;
+using Lotaris.LmeCl.Store;
 using System;
 using System.Collections.Generic;
 using Windows.UI.Popups;
@@ -12,11 +13,28 @@ namespace HelloWorld
     /// <summary>
     /// A basic page that provides characteristics common to most applications.
     /// </summary>
-    public sealed partial class MainPage : HelloWorld.Common.LayoutAwarePage
+    public sealed partial class MainPage
     {
+        /// <summary>
+        /// The photo page product token defined by you when creating the Lotaris application.
+        /// </summary>
+        private const string PhotoPageProductToken = "ADD_YOUR_PRODUCT_TOKEN_HERE";
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MainPage"/> class.
+        /// </summary>
         public MainPage()
         {
-            this.InitializeComponent();
+            InitializeComponent();
+
+            App myApp = Application.Current as App;
+            myApp.LicensingFinished += async possibleException =>
+                                           {
+                                               if (possibleException != null)
+                                               {
+                                                   await new MessageDialog("Unable to contact Lotaris server. Please try again...", "Hello world! Lotaris edition").ShowAsync();
+                                               }
+                                           };
         }
 
         /// <summary>
@@ -58,52 +76,91 @@ namespace HelloWorld
             // The user name is already saved, so you don't need to save it here.
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        /// <summary>
+        /// Handles the Click event of the Button control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="RoutedEventArgs"/> instance containing the event data.</param>
+        private void ButtonClick(object sender, RoutedEventArgs e)
         {
             greetingOutput.Text = "Hello, " + nameInput.Text + "!";
         }
 
-        private void NameInput_TextChanged(object sender, TextChangedEventArgs e)
+        /// <summary>
+        /// Handles the TextChanged event of the NameInput control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="TextChangedEventArgs"/> instance containing the event data.</param>
+        private void NameInputTextChanged(object sender, TextChangedEventArgs e)
         {
             Windows.Storage.ApplicationDataContainer roamingSettings =
                 Windows.Storage.ApplicationData.Current.RoamingSettings;
             roamingSettings.Values["userName"] = nameInput.Text;
         }
 
-        private async void PhotoPageButton_Click(object sender, RoutedEventArgs e)
+        /// <summary>
+        /// Handles the Click event of the PhotoPageButton control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="RoutedEventArgs"/> instance containing the event data.</param>
+        private async void PhotoPageButtonClick(object sender, RoutedEventArgs e)
         {
-            // Check if the in-app offer license is valid
-            if (!CurrentApp.LicenseInformation.ProductLicenses["np_tl"].IsActive)
+            try
             {
-                // If not, then start the purchase flow
-                MessageDialog msg = new MessageDialog("This is a charged option, would you like to proceed to the payment page?", "Access protected");
-                msg.Commands.Add(new UICommand("Yes", async (UICommandInvokedHandler) =>
+                // Check the existence of this in-app offer
+                if (!CurrentApp.LicenseInformation.ProductLicenses.ContainsKey(PhotoPageProductToken))
                 {
-                    await CurrentApp.RequestProductPurchaseAsync("np_tl");
+                    await new MessageDialog("This option is not available.", "Access denied").ShowAsync();
+                    return;
+                }
 
-                    // Check if the user as validate the in-app offer
-                    if (!CurrentApp.LicenseInformation.ProductLicenses["np_tl"].IsActive)
+                // Check if the in-app offer license is valid
+                if (CurrentApp.LicenseInformation.ProductLicenses[PhotoPageProductToken].IsActive)
+                {
+                    if (Frame != null)
                     {
-                        msg = new MessageDialog("This option is not available.", "Access denied");
-                        await msg.ShowAsync();
+                        Frame.Navigate(typeof(PhotoPage));
                     }
-                    else
+                }
+                else
+                {
+                    // If not, then start the purchase flow
+                    MessageDialog msg = new MessageDialog("This is a charged option, would you like to proceed to the payment page?", "Access protected");
+                    msg.Commands.Add(new UICommand("Yes", async UICommandInvokedHandler =>
                     {
-                        if (this.Frame != null)
+                        await CurrentApp.RequestProductPurchaseAsync(PhotoPageProductToken);
+
+                        // Re-check the existence of this in-app offer
+                        if (!CurrentApp.LicenseInformation.ProductLicenses.ContainsKey(PhotoPageProductToken))
                         {
-                            this.Frame.Navigate(typeof(PhotoPage));
+                            await new MessageDialog("This option is not available.", "Access denied").ShowAsync();
+                            return;
                         }
-                    }
-                }));
 
-                msg.Commands.Add(new UICommand("No", (UICommandInvokedHandler) => { }));
-                await msg.ShowAsync();
+                        // Check if the user has the in-app offer
+                        if (CurrentApp.LicenseInformation.ProductLicenses[PhotoPageProductToken].IsActive)
+                        {
+                            if (Frame != null)
+                            {
+                                Frame.Navigate(typeof(PhotoPage));
+                            }
+                        }
+                        else
+                        {
+                            msg = new MessageDialog("This option is not available.", "Access denied");
+                            await msg.ShowAsync();
+                        }
+                    }));
+
+                    msg.Commands.Add(new UICommand("No"));
+                    await msg.ShowAsync();
+                }
             }
-            else
+            catch (Exception ex)
             {
-                if (this.Frame != null)
+                if (ex.GetType() != typeof(UnauthorizedAccessException))
                 {
-                    this.Frame.Navigate(typeof(PhotoPage));
+                    new MessageDialog("An error occurred while trying to navigate to the PhotoPage", "Hello world! Lotaris edition").ShowAsync();
                 }
             }
         }

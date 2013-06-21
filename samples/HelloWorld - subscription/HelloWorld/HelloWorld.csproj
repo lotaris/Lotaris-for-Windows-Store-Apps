@@ -149,13 +149,11 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="Lotaris.LmeCl.Core, Version=1.2.0.0, Culture=neutral, PublicKeyToken=75fbe77452c25c9d, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\Desktop\LME - Metro lib\Lotaris.LmeCl.Core.dll</HintPath>
+    <Reference Include="Lotaris.LmeCl.Core">
+      <HintPath>..\..\..\Store Apps SDK\Lotaris.LmeCl.Core.dll</HintPath>
     </Reference>
-    <Reference Include="Lotaris.LmeCl.Metro, Version=1.2.0.0, Culture=neutral, PublicKeyToken=e8494e43143a0396, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\Desktop\LME - Metro lib\Lotaris.LmeCl.Metro.dll</HintPath>
+    <Reference Include="Lotaris.LmeCl.Metro">
+      <HintPath>..\..\..\Store Apps SDK\Lotaris.LmeCl.Metro.dll</HintPath>
     </Reference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '11.0' ">

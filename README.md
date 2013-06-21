@@ -28,7 +28,7 @@ alt="Lotaris setup introduction" width="640" height="360" border="10" /></a>
 Right click on the *References* item under your project. Click on *Add reference...* and select *Browse....* and select the libraries Lotaris.LmeCl.Core.dll and Lotaris.LmeCl.Metro.dll.
 
 ## Initializing the Lotaris Library
-First import the Lotaris namespace `Lotaris.LmeCl.Store` then initialize the Lotaris library by calling the method `Lotaris.LmeCl.Store.CurrentApp.InitializeLicensing` in order to use the Lotaris features.
+First import the Lotaris namespace `Lotaris.LmeCl.Store` then initialize the Lotaris library by calling the method `CurrentApp.InitializeLicensing` in order to use the Lotaris features.
 This method should be called only once, you should call it in your `App.xaml.cs` once your UI has been built.
 
 **API Reference**
@@ -51,20 +51,16 @@ Note: In case the initialization fails, for example if there is no connection to
 // App.xaml.cs
 // Can be queried to know whether licensing information is currently available
 public bool IsLicensingInitializationFinished { get; private set; }
-// Raised when the licensing is loaded
-public event Action LicensingFinished;
+// Raised when the licensing is loaded. Will contain an exception if there were errors while initializing the licensing.
+public event Action<Exception> LicensingFinished;
 protected async override void OnLaunched(LaunchActivatedEventArgs args)
 {
 	...
-
+        Exception possibleException = null;
         await CurrentApp.InitializeLicensing("https://lme.onlotaris.com/core", 
 	      "ADD_YOUR_APP_ID_HERE", 
 	      "ADD_YOUR_PASSWORD_HERE", 
-	      async exception =>
-	      {
-			MessageDialog msg = new MessageDialog("Unable to contact Lotaris server. Please try again...", "Hello world! Lotaris edition");
-			await msg.ShowAsync();
-	      });
+	      exception => { possibleException = exception; });
         IsLicensingInitializationFinished = true;
         if (LicensingFinished != null)
         {
@@ -84,11 +80,16 @@ public YourViewModel()
         }
         else
         {
-                myApp.LicensingFinished += () => UpdateUiWithLicensingInformation();
+                myApp.LicensingFinished += UpdateUiWithLicensingInformation;
         }
 }
-private void UpdateUiWithLicensingInformation()
+private void UpdateUiWithLicensingInformation(Exception possibleException = null)
 {
+        if (possibleException != null)
+        {
+                await new MessageDialog("Unable to contact Lotaris server. Please try again...", "Hello world! Lotaris edition").ShowAsync();
+                return;
+        }
         // Use CurrentApp.* methods here and keep a flag to know that you can access licensing features from now on
 }
 ```
@@ -142,20 +143,28 @@ Purchasing an In-App Offer is as simple as purchasing application license. Simpl
 
 **Sample code**
 ```C#
-// Check if the user has a valid license for the in-app offer
-if (!CurrentApp.LicenseInformation.ProductLicenses[OfferToken].IsActive)
+// Check if the in-app offer exists
+if (CurrentApp.LicenseInformation.ProductLicenses.ContainsKey(OfferToken))
 {
-	await CurrentApp.RequestProductPurchaseAsync(OfferToken);
-	// Check the updated product license
+	// Check if the user has a valid license for the in-app offer
+	if (CurrentApp.LicenseInformation.ProductLicenses[OfferToken].IsActive)
+	{
+		// The end user has access to the In-App Offer
+	}
+	else
+	{
+		await CurrentApp.RequestProductPurchaseAsync(OfferToken);
+		// Check the updated product license
+	}
 }
 else
 {
-	// The end user has access to the In-App Offer
+	// The in-app offer doesn't exist. Consider checking of the OfferToken is correct.
 }
 ```
 
 ## Checking the License Status
-Next step, if you selected a subscription, time-limited, or perpetual model, you can check the license information using the `Lotaris.LmeCl.Store.CurrentApp.LicenseInformation` object.  The following members of LicenseInformation can be used:
+Next step, if you selected a subscription, time-limited, or perpetual model, you can check the license information using the `CurrentApp.LicenseInformation` object.  The following members of LicenseInformation can be used:
 + IsTrial (bool): whether the current license is a trial or a full version. If this member is set to false, the application was purchased by the consumer, but it doesn’t mean that it is still active as it may have expired. In order to give full access to the application, you should check both the IsTrial and IsActive members.
 + IsActive (bool): whether the license is currently active. Set to false if the current license (trial or time-limited) has expired. You may want to check this value in pair with IsTrial to know whether it is trial or paid license that has become inactive.
 + ExpirationDate (DateTimeOffset): the date when the license expires. Set correctly only for currently active time-limited licenses. Set to DateTimeOffset.MaxValue for perpetual licenses and subscriptions (the lifecycle of subscriptions in handled by the Lotaris Server). If the license has expired, there is no guarantee that the expiration date is correctly set, but it will be set to a date in the past.

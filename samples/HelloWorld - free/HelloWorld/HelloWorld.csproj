@@ -150,10 +150,10 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Lotaris.LmeCl.Core">
-      <HintPath>..\..\..\..\..\Desktop\LME - Metro lib\Lotaris.LmeCl.Core.dll</HintPath>
+      <HintPath>..\..\..\Store Apps SDK\Lotaris.LmeCl.Core.dll</HintPath>
     </Reference>
     <Reference Include="Lotaris.LmeCl.Metro">
-      <HintPath>..\..\..\..\..\Desktop\LME - Metro lib\Lotaris.LmeCl.Metro.dll</HintPath>
+      <HintPath>..\..\..\Store Apps SDK\Lotaris.LmeCl.Metro.dll</HintPath>
     </Reference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '11.0' ">

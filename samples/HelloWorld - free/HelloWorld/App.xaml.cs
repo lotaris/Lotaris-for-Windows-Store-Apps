@@ -2,7 +2,6 @@
 using System;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
-using Windows.UI.Popups;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 
@@ -22,9 +21,9 @@ namespace HelloWorld
         public bool IsLicensingInitializationFinished { get; private set; }
 
         /// <summary>
-        /// Raised when the licensing is loaded
+        /// Raised when the licensing is loaded. Will contain an exception if there were errors while initializing the licensing.
         /// </summary>
-        public event Action LicensingFinished;
+        public event Action<Exception> LicensingFinished;
 
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
@@ -74,19 +73,22 @@ namespace HelloWorld
                     throw new Exception("Failed to create initial page");
                 }
             }
-	    // Ensure the current window is active
+            // Ensure the current window is active
             Window.Current.Activate();
+            Exception possibleException = null;
 
-            /// Initialize the Lotaris licensing with an offline grace periode null
+            // Initialize the Lotaris licensing with an offline grace periode null
             await CurrentApp.InitializeLicensing("https://lme.onlotaris.com/core",
                 "ADD_YOUR_APP_ID_HERE",
                 "ADD_YOUR_PASSWORD_HERE",
-                async exception =>
-                {
-                    MessageDialog msg = new MessageDialog("Unable to contact Lotaris server. Please try again...", "Hello world! Lotaris edition");
-                    await msg.ShowAsync();
-                },
+                exception => { possibleException = exception; },
                 new TimeSpan(0, 0, 0));
+
+            IsLicensingInitializationFinished = true;
+            if (LicensingFinished != null)
+            {
+                LicensingFinished(possibleException);
+            }
         }
 
         /// <summary>
