@@ -139,7 +139,7 @@ private async void UpdateUIWithLicensingInformation()
 ## Purchasing an In-App Offer
 If you want to support In-App Offers in your application, you can retrieve the catalogue of the offers using method `CurrentApp.LoadListingInformationAsync()`.
 
-Purchasing an In-App Offer is as simple as purchasing application license. Simply call the `CurrentApp.RequestProductPurchaseAsync(string OfferToken, bool includeReceipt = false)` method to start the conversation and check the product license using the `CurrentApp.LicenseInformation.ProductLicenses[String OfferToken]` method. 
+Purchasing an In-App Offer is as simple as purchasing application license. Simply call the `CurrentApp.RequestProductPurchaseAsync(string OfferToken, bool includeReceipt = false)` method to start the conversation and check the product license using the CurrentApp.LicenseInformation.ProductLicenses[String OfferToken].IsActive property. Please note that before trying to access the "OfferToken" key in the "ProductLicenses" dictionary, it's worth checking if it contains it or not.
 
 **Sample code**
 ```C#
