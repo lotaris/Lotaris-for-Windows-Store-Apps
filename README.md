@@ -64,7 +64,7 @@ protected async override void OnLaunched(LaunchActivatedEventArgs args)
         IsLicensingInitializationFinished = true;
         if (LicensingFinished != null)
         {
-                LicensingFinished();
+                LicensingFinished(possibleException);
         }
 }
 ```
@@ -159,7 +159,7 @@ if (CurrentApp.LicenseInformation.ProductLicenses.ContainsKey(OfferToken))
 }
 else
 {
-	// The in-app offer doesn't exist. Consider checking of the OfferToken is correct.
+	// The in-app offer doesn't exist. Consider checking if the OfferToken is correct.
 }
 ```
 
